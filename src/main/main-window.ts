@@ -1,0 +1,38 @@
+import { is } from '@electron-toolkit/utils'
+import { BrowserWindow } from 'electron'
+import { join } from 'path'
+import { createTab, getAllTabs } from './tab-manager'
+
+export const createMainWindow = (): BrowserWindow => {
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    show: false,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+
+  mainWindow.on('ready-to-show', () => {
+    mainWindow.show()
+
+    mainWindow.on('ready-to-show', () => {
+      mainWindow.show()
+      // gửi danh sách tab hiện có xuống renderer
+      mainWindow.webContents.send('tabs:sync', getAllTabs())
+    })
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  } else {
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+
+  // Mở sẵn 1 tab Google khi app start
+  createTab(mainWindow, 'https://www.google.com')
+
+  return mainWindow
+}
