@@ -6,15 +6,18 @@ export type Tab = {
   url: string
   isLoading: boolean
   secure: boolean
+  windowId?: number
 }
 
 type TabState = {
   tabs: Tab[]
   activeId: string | null
-  addTab: (tab: { id: string; title?: string; url?: string }) => void
+  addTab: (tab: { id: string; title?: string; url?: string; windowId?: number }) => void
   closeTab: (id: string) => void
   setActive: (id: string) => void
   updateTab: (id: string, patch: Partial<Tab>) => void
+  reorderTabs: (sourceId: string, targetId: string) => void
+  moveTabToWindow: (id: string, newWindowId: number) => void
 }
 
 const HOMEPAGE = 'https://www.google.com'
@@ -23,15 +26,16 @@ export const useTabs = create<TabState>((set, get) => ({
   tabs: [],
   activeId: null,
 
-  addTab: ({ id, title, url }) => {
+  addTab: ({ id, title, url, windowId }) => {
     const exists = get().tabs.some((t) => t.id === id)
     if (exists) return
     const newTab: Tab = {
       id,
       title: title ?? 'New Tab',
       url: url ?? HOMEPAGE,
-      isLoading: true,
-      secure: true
+      isLoading: false,
+      secure: true,
+      windowId
     }
     set((state) => ({ tabs: [...state.tabs, newTab], activeId: id }))
   },
@@ -51,13 +55,38 @@ export const useTabs = create<TabState>((set, get) => ({
     set((state) => ({
       tabs: state.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t))
     }))
+  },
+
+  reorderTabs: (sourceId, targetId) => {
+    set((state) => {
+      const tabs = [...state.tabs]
+      const sourceIndex = tabs.findIndex((t) => t.id === sourceId)
+      const targetIndex = tabs.findIndex((t) => t.id === targetId)
+      if (sourceIndex === -1 || targetIndex === -1) return {}
+      const [removed] = tabs.splice(sourceIndex, 1)
+      tabs.splice(targetIndex, 0, removed)
+      return { tabs }
+    })
+  },
+
+  moveTabToWindow: (id, newWindowId) => {
+    set((state) => ({
+      tabs: state.tabs.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              windowId: newWindowId
+            }
+          : t
+      )
+    }))
   }
 }))
 
 // Đồng bộ từ main process
 if (typeof window !== 'undefined' && (window as any).tabs) {
-  window.tabs.onCreated(({ id, url, title }) => {
-    useTabs.getState().addTab({ id, url, title })
+  window.tabs.onCreated(({ id, url, title, windowId }) => {
+    useTabs.getState().addTab({ id, url, title, windowId })
   })
 
   window.tabs.onActivated((id: string) => {
@@ -68,7 +97,7 @@ if (typeof window !== 'undefined' && (window as any).tabs) {
     useTabs.getState().closeTab(id)
   })
 
-  window.tabs.onSync((list: { id: string; url: string; title: string }[]) => {
+  window.tabs.onSync((list: { id: string; url: string; title: string; windowId?: number }[]) => {
     list.forEach((tab) => {
       useTabs.getState().addTab(tab)
     })
@@ -78,13 +107,8 @@ if (typeof window !== 'undefined' && (window as any).tabs) {
   })
 
   window.tabs.onUpdated(({ id, title, url, isLoading }) => {
-    const patch: Partial<Tab> = {}
-    if (typeof title === 'string' && title.length > 0) patch.title = title
-    if (typeof url === 'string' && url.length > 0) patch.url = url
-    if (typeof isLoading === 'boolean') patch.isLoading = isLoading
-
-    if (Object.keys(patch).length > 0) {
-      useTabs.getState().updateTab(id, patch)
+    if (title || url) {
+      useTabs.getState().updateTab(id, { title, url })
     }
   })
 }

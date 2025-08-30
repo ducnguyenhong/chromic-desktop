@@ -16,7 +16,9 @@ const tabs = {
   onClosed: (cb) => ipcRenderer.on('tabs:closed', (_e, id) => cb(id)),
   // Quan trọng: cập nhật (title, url, isLoading, ...)
   onUpdated: (cb) => ipcRenderer.on('tabs:updated', (_e, payload) => cb(payload)),
-  onSync: (cb) => ipcRenderer.on('tabs:sync', (_e, list) => cb(list))
+  onSync: (cb) => ipcRenderer.on('tabs:sync', (_e, list) => cb(list)),
+
+  openSettings: () => ipcRenderer.invoke('tabs:openSettings')
 }
 
 if (process.contextIsolated) {

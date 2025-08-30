@@ -5,18 +5,27 @@ import { createTab, getAllTabs } from './tab-manager'
 
 export const createMainWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1920,
+    height: 1080,
+    minWidth: 640,
+    minHeight: 640,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
-    }
+    },
+    titleBarOverlay: {
+      color: '#e6e6e6',
+      symbolColor: '#262626',
+      height: 38
+    },
+    titleBarStyle: 'hidden'
   })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.maximize()
 
     mainWindow.on('ready-to-show', () => {
       mainWindow.show()
