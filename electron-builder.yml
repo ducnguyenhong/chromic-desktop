@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: chromic
+appId: com.chromic.app
+productName: Chromic
 directories:
   buildResources: build
 files:

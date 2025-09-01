@@ -13,6 +13,9 @@ interface Tab {
 const tabs: Record<string, Tab> = {}
 let activeTabId: string | null = null
 
+let sidePanel: WebContentsView | null = null
+let readerWidth = 400
+
 export const createTab = (mainWindow: BrowserWindow, url: string): string => {
   const id = `tab-${Date.now()}`
   const view = new WebContentsView({
@@ -77,6 +80,7 @@ export const closeTab = (mainWindow: BrowserWindow, id: string) => {
   const view = tabs[id].view
 
   if (activeTabId === id) {
+    mainWindow.contentView.removeChildView(view)
     view.webContents.close()
   }
 
@@ -95,9 +99,9 @@ export const resizeActiveTab = (mainWindow: BrowserWindow) => {
   const bounds = mainWindow.getBounds()
   tabs[activeTabId].view.setBounds({
     x: 0,
-    y: 100, // chừa cho tab bar + URL bar
+    y: 118, // chừa cho tab bar + URL bar
     width: bounds.width - 16,
-    height: bounds.height - 116
+    height: bounds.height - 134
   })
   // tabs[activeTabId].view.setAutoResize({ width: true, height: true })
 }
@@ -126,7 +130,7 @@ export const reloadTab = (id: string) => {
 export const tearOffTab = (id: string) => {
   if (!tabs[id]) return
   const tab = tabs[id]
-  const oldWindowId = tab.windowId
+  // const oldWindowId = tab.windowId
 
   const newWindow = new BrowserWindow({
     width: 900,
@@ -152,6 +156,89 @@ export const tearOffTab = (id: string) => {
   ])
 }
 
+function toggleReaderMode(mainWindow: BrowserWindow) {
+  if (!mainWindow) return
+
+  if (sidePanel) {
+    // Tắt reader
+    mainWindow.contentView.removeChildView(sidePanel)
+    sidePanel.webContents.close()
+    sidePanel = null
+
+    const bounds = mainWindow.getBounds()
+    const mainView = activeTabId ? tabs[activeTabId].view : null
+    if (mainView) {
+      mainView.setBounds({
+        x: 0,
+        y: 118,
+        width: bounds.width - 16,
+        height: bounds.height - 134
+      })
+    }
+    return
+  }
+
+  // Bật reader
+  sidePanel = new WebContentsView({
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+  mainWindow.contentView.addChildView(sidePanel)
+
+  const bounds = mainWindow.getBounds()
+  const leftWidth = bounds.width - readerWidth
+  const mainView = activeTabId ? tabs[activeTabId].view : null
+
+  if (mainView) {
+    mainView.setBounds({
+      x: 0,
+      y: 118,
+      width: leftWidth,
+      height: bounds.height - 134
+    })
+  }
+
+  sidePanel.setBounds({
+    x: leftWidth,
+    y: 118,
+    width: readerWidth,
+    height: bounds.height - 134
+  })
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    sidePanel.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/settings.html`)
+  } else {
+    sidePanel.webContents.loadFile(join(__dirname, '../renderer/settings.html'))
+  }
+}
+
+function resizeReader(mainWindow: BrowserWindow, delta: number) {
+  if (!mainWindow || !sidePanel) return
+  const bounds = mainWindow.getBounds()
+
+  const minWidth = 200
+  const maxWidth = bounds.width - 200
+  readerWidth = Math.min(Math.max(readerWidth + delta, minWidth), maxWidth)
+
+  const mainView = activeTabId ? tabs[activeTabId].view : null
+  if (mainView) {
+    mainView.setBounds({
+      x: 0,
+      y: 118,
+      width: bounds.width - readerWidth,
+      height: bounds.height - 134
+    })
+  }
+
+  sidePanel.setBounds({
+    x: bounds.width - readerWidth,
+    y: 118,
+    width: readerWidth,
+    height: bounds.height - 134
+  })
+}
+
 // IPC
 export const registerTabIpc = (mainWindow: BrowserWindow) => {
   ipcMain.handle('tabs:create', (_, url: string) => createTab(mainWindow, url))
@@ -163,6 +250,9 @@ export const registerTabIpc = (mainWindow: BrowserWindow) => {
   ipcMain.handle('tabs:reload', (_, id: string) => reloadTab(id))
   ipcMain.handle('tabs:tearOff', (_, id: string) => tearOffTab(id))
   ipcMain.handle('tabs:openSettings', () => openSettingsTab(mainWindow))
+
+  ipcMain.handle('reader:toggle', () => toggleReaderMode(mainWindow))
+  ipcMain.handle('reader:resize', (_e, delta: number) => resizeReader(mainWindow, delta))
 
   mainWindow.on('resize', () => resizeActiveTab(mainWindow))
   mainWindow.on('maximize', () => resizeActiveTab(mainWindow))

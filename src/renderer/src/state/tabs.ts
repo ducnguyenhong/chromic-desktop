@@ -1,3 +1,4 @@
+import { HOME_PAGE_URL } from '@renderer/utils/const'
 import { create } from 'zustand'
 
 export type Tab = {
@@ -20,8 +21,6 @@ type TabState = {
   moveTabToWindow: (id: string, newWindowId: number) => void
 }
 
-const HOMEPAGE = 'https://www.google.com'
-
 export const useTabs = create<TabState>((set, get) => ({
   tabs: [],
   activeId: null,
@@ -32,7 +31,7 @@ export const useTabs = create<TabState>((set, get) => ({
     const newTab: Tab = {
       id,
       title: title ?? 'New Tab',
-      url: url ?? HOMEPAGE,
+      url: url ?? HOME_PAGE_URL,
       isLoading: false,
       secure: true,
       windowId
@@ -108,7 +107,7 @@ if (typeof window !== 'undefined' && (window as any).tabs) {
 
   window.tabs.onUpdated(({ id, title, url, isLoading }) => {
     if (title || url) {
-      useTabs.getState().updateTab(id, { title, url })
+      useTabs.getState().updateTab(id, { title, url, isLoading })
     }
   })
 }

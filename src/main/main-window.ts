@@ -2,11 +2,12 @@ import { is } from '@electron-toolkit/utils'
 import { BrowserWindow } from 'electron'
 import { join } from 'path'
 import { createTab, getAllTabs } from './tab-manager'
+import { HOME_PAGE_URL } from './utils/const'
 
 export const createMainWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
-    width: 1920,
-    height: 1080,
+    width: 1820,
+    height: 980,
     minWidth: 640,
     minHeight: 640,
     show: false,
@@ -40,8 +41,8 @@ export const createMainWindow = (): BrowserWindow => {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  // Mở sẵn 1 tab Google khi app start
-  createTab(mainWindow, 'https://www.google.com')
+  // Mở sẵn 1 tab khi app start
+  createTab(mainWindow, HOME_PAGE_URL)
 
   return mainWindow
 }

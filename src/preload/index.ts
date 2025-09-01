@@ -21,10 +21,16 @@ const tabs = {
   openSettings: () => ipcRenderer.invoke('tabs:openSettings')
 }
 
+const reader = {
+  toggle: () => ipcRenderer.invoke('reader:toggle'),
+  resize: (delta: number) => ipcRenderer.invoke('reader:resize', delta)
+}
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('tabs', tabs)
+    contextBridge.exposeInMainWorld('reader', reader)
   } catch (error) {
     console.error(error)
   }
@@ -33,4 +39,6 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore
   window.tabs = tabs
+  // @ts-ignore
+  window.reader = reader
 }

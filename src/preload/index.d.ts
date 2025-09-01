@@ -5,5 +5,6 @@ declare global {
     electron: ElectronAPI
     api: unknown
     tabs: any
+    reader: any
   }
 }
