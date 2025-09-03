@@ -1,5 +1,5 @@
 import { Flex, Image } from '@chakra-ui/react'
-import Logo from '@renderer/assets/logo.webp'
+import Logo from '@renderer/assets/logo.png'
 import { useTabs } from '@renderer/state/tabs'
 import { HOME_PAGE_URL } from '@renderer/utils/const'
 import { IoAdd } from 'react-icons/io5'

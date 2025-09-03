@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Chromic",
   "main": "./out/main/index.js",
-  "author": "Nguyen Hong Duc",
+  "author": "Landify",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
