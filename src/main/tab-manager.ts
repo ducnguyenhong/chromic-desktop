@@ -239,6 +239,14 @@ function resizeReader(mainWindow: BrowserWindow, delta: number) {
   })
 }
 
+const inspectActiveTab = () => {
+  if (!activeTabId) return
+  const tab = tabs[activeTabId]
+  if (tab?.view) {
+    tab.view.webContents.openDevTools()
+  }
+}
+
 // IPC
 export const registerTabIpc = (mainWindow: BrowserWindow) => {
   ipcMain.handle('tabs:create', (_, url: string) => createTab(mainWindow, url))
@@ -250,6 +258,7 @@ export const registerTabIpc = (mainWindow: BrowserWindow) => {
   ipcMain.handle('tabs:reload', (_, id: string) => reloadTab(id))
   ipcMain.handle('tabs:tearOff', (_, id: string) => tearOffTab(id))
   ipcMain.handle('tabs:openSettings', () => openSettingsTab(mainWindow))
+  ipcMain.handle('tabs:inspect', () => inspectActiveTab())
 
   ipcMain.handle('reader:toggle', () => toggleReaderMode(mainWindow))
   ipcMain.handle('reader:resize', (_e, delta: number) => resizeReader(mainWindow, delta))

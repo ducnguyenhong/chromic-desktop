@@ -4,6 +4,7 @@ import { AiOutlineAppstore, AiOutlineMoon } from 'react-icons/ai'
 import { BsFiletypeJson } from 'react-icons/bs'
 import { IoCodeSlashOutline } from 'react-icons/io5'
 import { LiaRulerSolid } from 'react-icons/lia'
+import { RiCodeFill } from 'react-icons/ri'
 import { TbApi } from 'react-icons/tb'
 import { VscSymbolColor } from 'react-icons/vsc'
 
@@ -54,14 +55,29 @@ const Tools: React.FC = () => {
   ]
 
   return (
-    <Flex px="10px" align="center">
+    <Flex px="10px" align="center" gap="6px">
+      <Flex
+        title="Developer Tools"
+        w="28px"
+        h="28px"
+        align="center"
+        justify="center"
+        borderRadius="full"
+        bgColor="#f2f2f2"
+        transitionDuration="200ms"
+        _hover={{ bgColor: '#d9d9d9' }}
+        onClick={() => window.tabs.inspectCurrent()}
+      >
+        <RiCodeFill size={18} color="#4f4f4f" />
+      </Flex>
+
       <MotionBox
         overflow="hidden"
         initial={{ width: 0 }}
         animate={{ width: open ? 'auto' : 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
-        <Flex align="center" gap="6px" pr="6px">
+        <Flex align="center" gap="6px">
           {TOOLS.map((item) => {
             const { icon, id, onClick, title } = item
 

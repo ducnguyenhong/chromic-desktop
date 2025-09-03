@@ -1,4 +1,4 @@
-import { Box, Flex } from '@chakra-ui/react'
+import { Box, Flex, Text } from '@chakra-ui/react'
 import { FiDownload } from 'react-icons/fi'
 import { HiOutlineDotsVertical } from 'react-icons/hi'
 import AddressBar from './components/common/address-bar'
@@ -41,13 +41,14 @@ const App: React.FC = () => {
         </Flex>
       </Flex>
       <Flex
+        pl="10px"
         h="40px"
         bgColor="#FFF"
         align="center"
         justify="space-between"
         borderBottom="1px solid #e6e6e6"
       >
-        a
+        <Text fontSize={13}>Chromic 0.0.1</Text>
         <Tools />
       </Flex>
     </Box>

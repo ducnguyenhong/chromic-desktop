@@ -18,7 +18,8 @@ const tabs = {
   onUpdated: (cb) => ipcRenderer.on('tabs:updated', (_e, payload) => cb(payload)),
   onSync: (cb) => ipcRenderer.on('tabs:sync', (_e, list) => cb(list)),
 
-  openSettings: () => ipcRenderer.invoke('tabs:openSettings')
+  openSettings: () => ipcRenderer.invoke('tabs:openSettings'),
+  inspectCurrent: () => ipcRenderer.invoke('tabs:inspect')
 }
 
 const reader = {
