@@ -105,9 +105,7 @@ if (typeof window !== 'undefined' && (window as any).tabs) {
     }
   })
 
-  window.tabs.onUpdated(({ id, title, url, isLoading }) => {
-    if (title || url) {
-      useTabs.getState().updateTab(id, { title, url, isLoading })
-    }
+  window.tabs.onUpdated(({ id, patch }) => {
+    useTabs.getState().updateTab(id, patch)
   })
 }

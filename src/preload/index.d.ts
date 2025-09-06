@@ -6,5 +6,6 @@ declare global {
     api: unknown
     tabs: any
     reader: any
+    ui: any
   }
 }

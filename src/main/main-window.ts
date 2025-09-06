@@ -2,7 +2,6 @@ import { is } from '@electron-toolkit/utils'
 import { BrowserWindow } from 'electron'
 import { join } from 'path'
 import { createTab, getAllTabs } from './tab-manager'
-import { HOME_PAGE_URL } from './utils/const'
 
 export const createMainWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
@@ -42,7 +41,7 @@ export const createMainWindow = (): BrowserWindow => {
   }
 
   // Mở sẵn 1 tab khi app start
-  createTab(mainWindow, HOME_PAGE_URL)
+  createTab(mainWindow)
 
   return mainWindow
 }

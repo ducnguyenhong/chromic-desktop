@@ -1,13 +1,20 @@
-import { Box, Flex, Icon, Image, Spinner, Text } from '@chakra-ui/react';
-import { Tab, useTabs } from '@renderer/state/tabs';
-import { AiOutlineClose } from 'react-icons/ai';
+import { Box, Flex, Icon, Image, Spinner, Text } from '@chakra-ui/react'
+import FaviconHome from '@renderer/assets/home-favicon.webp'
+import { Tab, useTabs } from '@renderer/state/tabs'
+import { useMemo } from 'react'
+import { AiOutlineClose } from 'react-icons/ai'
 
 const TabItem: React.FC<{ item: Tab; index: number }> = ({ item, index }) => {
   const { id, isLoading, url, title } = item
   const { tabs, activeId } = useTabs()
   const isActive = id === activeId
   const activeIndex = tabs.findIndex((i) => i.id === activeId)
-  const favicon = `https://www.google.com/s2/favicons?domain=${url.slice(0, -1)}&sz=128`
+  const favicon = useMemo(() => {
+    if (url.includes('chromic_home.html')) {
+      return FaviconHome
+    }
+    return `https://www.google.com/s2/favicons?domain=${url.slice(0, -1)}&sz=128`
+  }, [url])
 
   const handleActivate = async (id: string) => {
     await window.tabs.activate(id)
@@ -31,13 +38,15 @@ const TabItem: React.FC<{ item: Tab; index: number }> = ({ item, index }) => {
       justify="flex-start"
       align="center"
       h="32px"
-      w="200px"
+      w="220px"
       pos="relative"
       onClick={() => handleActivate(id)}
     >
-      <Flex flex={1} align="center">
+      <Flex flex={1} align="center" mt="-2px">
         {isLoading ? (
-          <Spinner size="xs" color="#000" />
+          <Box mt="4px">
+            <Spinner color="green.700" size="sm" />
+          </Box>
         ) : (
           <Image src={favicon} w="16px" h="16px" alt="favicon" />
         )}
@@ -56,7 +65,7 @@ const TabItem: React.FC<{ item: Tab; index: number }> = ({ item, index }) => {
           pos="relative"
           top="-2px"
           right="-12px"
-          zIndex={100}
+          zIndex={1000}
           transitionDuration="200ms"
           _hover={{ bgColor: isActive ? '#d9d9d9' : '#ccc' }}
         >

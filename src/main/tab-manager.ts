@@ -16,7 +16,7 @@ let activeTabId: string | null = null
 let sidePanel: WebContentsView | null = null
 let readerWidth = 400
 
-export const createTab = (mainWindow: BrowserWindow, url: string): string => {
+export const createTab = (mainWindow: BrowserWindow): string => {
   const id = `tab-${Date.now()}`
   const view = new WebContentsView({
     webPreferences: {
@@ -25,16 +25,32 @@ export const createTab = (mainWindow: BrowserWindow, url: string): string => {
     }
   })
 
-  view.webContents.loadURL(url)
-
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    view.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/chromic_home.html`)
+  } else {
+    view.webContents.loadFile(join(__dirname, '../renderer/chromic_home.html'))
+  }
   // Khi bắt đầu load
   view.webContents.on('did-start-loading', () => {
     mainWindow.webContents.send('tabs:updated', {
       id,
-      patch: {
-        isLoading: true,
-        url: view.webContents.getURL()
-      }
+      patch: { isLoading: true }
+    })
+  })
+
+  // Khi URL thay đổi (redirect / click link)
+  view.webContents.on('did-navigate', (_event, url) => {
+    mainWindow.webContents.send('tabs:updated', {
+      id,
+      patch: { url }
+    })
+  })
+
+  // Khi URL thay đổi trong trang (SPA / #hash)
+  view.webContents.on('did-navigate-in-page', (_event, url) => {
+    mainWindow.webContents.send('tabs:updated', {
+      id,
+      patch: { url }
     })
   })
 
@@ -43,22 +59,41 @@ export const createTab = (mainWindow: BrowserWindow, url: string): string => {
     const title = view.webContents.getTitle()
     const patch: Partial<Tab> = { isLoading: false }
     if (title && title.trim() !== '') patch.title = title
-    mainWindow.webContents.send('tabs:updated', {
-      id,
-      patch
-    })
+
+    mainWindow.webContents.send('tabs:updated', { id, patch })
   })
 
   // Khi title thay đổi
-  view.webContents.on('page-title-updated', (_, title) => {
+  view.webContents.on('page-title-updated', (_event, title) => {
     mainWindow.webContents.send('tabs:updated', {
       id,
       patch: { title }
     })
   })
 
+  // Khi load fail (VD: back trong lúc đang tải, DNS fail, cancel request...)
+  view.webContents.on('did-fail-load', () => {
+    mainWindow.webContents.send('tabs:updated', {
+      id,
+      patch: { isLoading: false }
+    })
+  })
+
   tabs[id] = { id, view, windowId: mainWindow.id }
   setActiveTab(mainWindow, id)
+
+  // --- Giật lại focus ---
+  const stealBackFocus = () => {
+    mainWindow.webContents.focus()
+    mainWindow.webContents.send('ui:focus-address-bar')
+  }
+
+  // Giật ngay sau khi addChildView
+  setTimeout(stealBackFocus, 0)
+
+  // Và giật lại khi view load (phòng trường hợp bị cướp muộn)
+  view.webContents.once('did-start-loading', () => setTimeout(stealBackFocus, 0))
+  view.webContents.once('dom-ready', () => setTimeout(stealBackFocus, 0))
 
   return id
 }
@@ -67,9 +102,9 @@ export const setActiveTab = (mainWindow: BrowserWindow, id: string) => {
   if (!tabs[id]) return
   activeTabId = id
 
-  // chỉ show 1 view tại 1 thời điểm
-  mainWindow.contentView.addChildView(tabs[id].view)
-
+  // Sau đó add view mới
+  const view = tabs[id].view
+  mainWindow.contentView.addChildView(view)
   resizeActiveTab(mainWindow)
 
   mainWindow.webContents.send('tabs:activated', id)
@@ -79,10 +114,10 @@ export const closeTab = (mainWindow: BrowserWindow, id: string) => {
   if (!tabs[id]) return
   const view = tabs[id].view
 
-  if (activeTabId === id) {
-    mainWindow.contentView.removeChildView(view)
-    view.webContents.close()
-  }
+  // if (activeTabId === id) {
+  mainWindow.contentView.removeChildView(view)
+  view.webContents.close()
+  // }
 
   delete tabs[id]
   mainWindow.webContents.send('tabs:closed', id)
@@ -124,6 +159,15 @@ export const goForward = (id: string) => {
 
 export const reloadTab = (id: string) => {
   tabs[id]?.view.webContents.reload()
+}
+
+// Từ home chuyển hướng load url
+export const navigateCurrent = (url: string) => {
+  if (!activeTabId) return
+  const tab = tabs[activeTabId]
+  if (tab) {
+    tab.view.webContents.loadURL(url)
+  }
 }
 
 // Tear-off tab: di chuyển sang cửa sổ mới
@@ -207,9 +251,9 @@ function toggleReaderMode(mainWindow: BrowserWindow) {
     height: bounds.height - 134
   })
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    sidePanel.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/settings.html`)
+    sidePanel.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/chromic_settings.html`)
   } else {
-    sidePanel.webContents.loadFile(join(__dirname, '../renderer/settings.html'))
+    sidePanel.webContents.loadFile(join(__dirname, '../renderer/chromic_settings.html'))
   }
 }
 
@@ -247,32 +291,11 @@ const inspectActiveTab = () => {
   }
 }
 
-// IPC
-export const registerTabIpc = (mainWindow: BrowserWindow) => {
-  ipcMain.handle('tabs:create', (_, url: string) => createTab(mainWindow, url))
-  ipcMain.handle('tabs:activate', (_, id: string) => setActiveTab(mainWindow, id))
-  ipcMain.handle('tabs:close', (_, id: string) => closeTab(mainWindow, id))
-  ipcMain.handle('tabs:navigate', (_, id: string, url: string) => navigateTab(id, url))
-  ipcMain.handle('tabs:back', (_, id: string) => goBack(id))
-  ipcMain.handle('tabs:forward', (_, id: string) => goForward(id))
-  ipcMain.handle('tabs:reload', (_, id: string) => reloadTab(id))
-  ipcMain.handle('tabs:tearOff', (_, id: string) => tearOffTab(id))
-  ipcMain.handle('tabs:openSettings', () => openSettingsTab(mainWindow))
-  ipcMain.handle('tabs:inspect', () => inspectActiveTab())
-
-  ipcMain.handle('reader:toggle', () => toggleReaderMode(mainWindow))
-  ipcMain.handle('reader:resize', (_e, delta: number) => resizeReader(mainWindow, delta))
-
-  mainWindow.on('resize', () => resizeActiveTab(mainWindow))
-  mainWindow.on('maximize', () => resizeActiveTab(mainWindow))
-  mainWindow.on('unmaximize', () => resizeActiveTab(mainWindow))
-}
-
 export const getAllTabs = () => {
   return Object.values(tabs).map((t) => ({
     id: t.id,
     url: t.view.webContents.getURL(),
-    title: t.view.webContents.getTitle() || 'New Tab',
+    title: t.view.webContents.getTitle() || 'Chromic',
     windowId: t.windowId
   }))
 }
@@ -290,9 +313,9 @@ export const openSettingsTab = (mainWindow: BrowserWindow) => {
   })
 
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    view.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/settings.html`)
+    view.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/chromic_settings.html`)
   } else {
-    view.webContents.loadFile(join(__dirname, '../renderer/settings.html'))
+    view.webContents.loadFile(join(__dirname, '../renderer/chromic_settings.html'))
   }
 
   tabs[id] = { id, view, windowId: mainWindow.id, title: 'Settings' }
@@ -301,4 +324,26 @@ export const openSettingsTab = (mainWindow: BrowserWindow) => {
 
   mainWindow.webContents.send('tabs:updated', { id, patch: { title: 'Settings' } })
   return id
+}
+
+// IPC
+export const registerTabIpc = (mainWindow: BrowserWindow) => {
+  ipcMain.handle('tabs:create', () => createTab(mainWindow))
+  ipcMain.handle('tabs:activate', (_, id: string) => setActiveTab(mainWindow, id))
+  ipcMain.handle('tabs:close', (_, id: string) => closeTab(mainWindow, id))
+  ipcMain.handle('tabs:navigate', (_, id: string, url: string) => navigateTab(id, url))
+  ipcMain.handle('tabs:back', (_, id: string) => goBack(id))
+  ipcMain.handle('tabs:forward', (_, id: string) => goForward(id))
+  ipcMain.handle('tabs:reload', (_, id: string) => reloadTab(id))
+  ipcMain.handle('tabs:tearOff', (_, id: string) => tearOffTab(id))
+  ipcMain.handle('tabs:openSettings', () => openSettingsTab(mainWindow))
+  ipcMain.handle('tabs:inspect', () => inspectActiveTab())
+  ipcMain.handle('tabs:navigateCurrent', (_e, url: string) => navigateCurrent(url))
+
+  ipcMain.handle('reader:toggle', () => toggleReaderMode(mainWindow))
+  ipcMain.handle('reader:resize', (_e, delta: number) => resizeReader(mainWindow, delta))
+
+  mainWindow.on('resize', () => resizeActiveTab(mainWindow))
+  mainWindow.on('maximize', () => resizeActiveTab(mainWindow))
+  mainWindow.on('unmaximize', () => resizeActiveTab(mainWindow))
 }

@@ -28,7 +28,8 @@ export default tseslint.config(
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
-      'react/prop-types': 'off'
+      'react/prop-types': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off'
     }
   },
   eslintConfigPrettier

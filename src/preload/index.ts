@@ -19,7 +19,9 @@ const tabs = {
   onSync: (cb) => ipcRenderer.on('tabs:sync', (_e, list) => cb(list)),
 
   openSettings: () => ipcRenderer.invoke('tabs:openSettings'),
-  inspectCurrent: () => ipcRenderer.invoke('tabs:inspect')
+  inspectCurrent: () => ipcRenderer.invoke('tabs:inspect'),
+
+  navigateCurrent: (url: string) => ipcRenderer.invoke('tabs:navigateCurrent', url)
 }
 
 const reader = {
@@ -27,11 +29,16 @@ const reader = {
   resize: (delta: number) => ipcRenderer.invoke('reader:resize', delta)
 }
 
+const ui = {
+  onFocusAddressBar: (cb: () => void) => ipcRenderer.on('ui:focus-address-bar', cb)
+}
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('tabs', tabs)
     contextBridge.exposeInMainWorld('reader', reader)
+    contextBridge.exposeInMainWorld('ui', ui)
   } catch (error) {
     console.error(error)
   }
@@ -42,4 +49,6 @@ if (process.contextIsolated) {
   window.tabs = tabs
   // @ts-ignore
   window.reader = reader
+  // @ts-ignore
+  window.ui = ui
 }

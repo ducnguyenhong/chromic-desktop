@@ -13,16 +13,28 @@ const TabBar: React.FC = () => {
   }
 
   return (
-    <Flex h="38px" bgColor="#e6e6e6" overflowX="auto" userSelect="none" align="flex-end">
-      <Flex
-        h="38px"
-        align="center"
-        justify="center"
-        pr="9px"
-        pl="8px"
-        onClick={() => window.tabs.openSettings()}
-      >
-        <Image src={Logo} w="23px" h="23px" alt="logo" />
+    <Flex
+      h="38px"
+      bgColor="#e6e6e6"
+      overflowX="auto"
+      userSelect="none"
+      align="flex-end"
+      pos="relative"
+    >
+      <Flex bgColor="#e6e6e6" h="38px" w="47px" pos="relative" pr="6px" zIndex={200}>
+        <Flex
+          h="full"
+          align="center"
+          justify="center"
+          bgColor="#e6e6e6"
+          pos="absolute"
+          top="0px"
+          left="0px"
+          w="48px"
+          onClick={() => window.tabs.openSettings()}
+        >
+          <Image src={Logo} w="23px" h="23px" alt="logo" />
+        </Flex>
       </Flex>
 
       {tabs.map((tab, tabIndex) => (

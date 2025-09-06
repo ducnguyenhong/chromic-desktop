@@ -1,0 +1,20 @@
+@keyframes shine {
+  0% {
+    background-position: 130% 0;
+  }
+
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.logo-animate {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(120deg, #4d4d4d 0%, #4d4d4d 40%, white 50%, #4d4d4d 60%, #4d4d4d 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 4.5s ease-in-out infinite;
+}
