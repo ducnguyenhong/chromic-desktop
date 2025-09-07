@@ -9,9 +9,26 @@ const HomePage: React.FC = () => {
   const [keyword, setKeyword] = useState<string>('')
 
   const onSearch = () => {
-    window.tabs.navigateCurrent(
-      `https://www.google.com/search?q=${encodeURIComponent(keyword.trim())}`
-    )
+    const input = keyword.trim()
+    let url: string
+
+    // Regex check domain hoặc URL
+    const domainRegex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/
+    const urlRegex = /^https?:\/\//
+
+    if (urlRegex.test(input)) {
+      // Đã có http:// hoặc https://
+      url = input
+    } else if (domainRegex.test(input)) {
+      // Là domain, thêm https:// vào
+      url = `https://${input}`
+    } else {
+      // Không phải domain, coi như search keyword
+      const query = encodeURIComponent(input)
+      url = `https://www.google.com/search?q=${query}`
+    }
+
+    window.tabs.navigateCurrent(url)
   }
 
   return (

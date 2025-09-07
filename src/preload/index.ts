@@ -33,12 +33,21 @@ const ui = {
   onFocusAddressBar: (cb: () => void) => ipcRenderer.on('ui:focus-address-bar', cb)
 }
 
+const sidebar = {
+  open: (target: { url?: string; file?: string; tabId: string }) =>
+    ipcRenderer.invoke('sidebar:open', target),
+  close: (tabId: string) => ipcRenderer.invoke('sidebar:close', tabId),
+  resize: (tabId: string, width: number) => ipcRenderer.invoke('sidebar:resize', tabId, width),
+  has: (tabId: string) => ipcRenderer.invoke('sidebar:has', tabId)
+}
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('tabs', tabs)
     contextBridge.exposeInMainWorld('reader', reader)
     contextBridge.exposeInMainWorld('ui', ui)
+    contextBridge.exposeInMainWorld('sidebar', sidebar)
   } catch (error) {
     console.error(error)
   }
@@ -51,4 +60,6 @@ if (process.contextIsolated) {
   window.reader = reader
   // @ts-ignore
   window.ui = ui
+  // @ts-ignore
+  window.sidebar = sidebar
 }

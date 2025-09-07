@@ -1,4 +1,5 @@
 import { Box, Flex, useDisclosure } from '@chakra-ui/react'
+import { useTabs } from '@renderer/state/tabs'
 import { motion } from 'framer-motion'
 import { AiOutlineAppstore, AiOutlineMoon } from 'react-icons/ai'
 import { BsFiletypeJson } from 'react-icons/bs'
@@ -12,27 +13,26 @@ const MotionBox = motion(Box)
 
 const Tools: React.FC = () => {
   const { open, onToggle } = useDisclosure()
+  const { activeId } = useTabs()
 
   const TOOLS = [
     {
       id: 'ruler',
       icon: <LiaRulerSolid size={20} color="#4f4f4f" />,
       title: 'Ruler',
-      onClick: async () => {
-        await window.reader.toggle()
-      }
+      onClick: () => window.sidebar.open({ url: 'https://stormik.vercel.app', tabId: activeId })
     },
     {
       id: 'color-picker',
       icon: <VscSymbolColor size={19} color="#4f4f4f" />,
       title: 'Color Picker',
-      onClick: () => {}
+      onClick: () => window.sidebar.open({ file: 'chromic_tool.html' })
     },
     {
       id: 'json-viewer',
       icon: <BsFiletypeJson size={17} color="#4f4f4f" />,
       title: 'JSON Viewer',
-      onClick: () => {}
+      onClick: () => window.sidebar.open({ url: 'https://24h.com.vn', tabId: activeId })
     },
     {
       id: 'api-caller',

@@ -1,7 +1,7 @@
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { app } from 'electron'
 import { createMainWindow } from './main-window'
-import { registerTabIpc } from './tab-manager'
+import { registerSidebarIpc, registerTabIpc } from './tab-manager'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.chromic')
@@ -12,6 +12,7 @@ app.whenReady().then(() => {
 
   const mainWindow = createMainWindow()
   registerTabIpc(mainWindow)
+  registerSidebarIpc(mainWindow)
 
   app.on('activate', () => {
     if (createMainWindow().isDestroyed()) {

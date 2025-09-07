@@ -7,5 +7,6 @@ declare global {
     tabs: any
     reader: any
     ui: any
+    sidebar: any
   }
 }

@@ -1,3 +1,8 @@
+::selection {
+  background: #026e19;
+  color: #fff;
+}
+
 @keyframes shine {
   0% {
     background-position: 130% 0;
