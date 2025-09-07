@@ -27,11 +27,8 @@ export const createMainWindow = (): BrowserWindow => {
     mainWindow.show()
     mainWindow.maximize()
 
-    mainWindow.on('ready-to-show', () => {
-      mainWindow.show()
-      // gửi danh sách tab hiện có xuống renderer
-      mainWindow.webContents.send('tabs:sync', getAllTabs())
-    })
+    // gửi danh sách tab hiện có xuống renderer
+    mainWindow.webContents.send('tabs:sync', getAllTabs())
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

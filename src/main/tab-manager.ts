@@ -130,10 +130,6 @@ export const resizeActiveTab = (mainWindow: BrowserWindow) => {
   resizeTab(mainWindow, activeTabId)
 }
 
-export const resizeAllTabs = (mainWindow: BrowserWindow) => {
-  Object.keys(tabs).forEach((id) => resizeTab(mainWindow, id))
-}
-
 // ================= TAB NAVIGATION =================
 export const navigateTab = (id: string, url: string) => {
   const tab = tabs[id]
@@ -262,7 +258,7 @@ export const registerTabIpc = (mainWindow: BrowserWindow) => {
 
 export const registerSidebarIpc = (mainWindow: BrowserWindow) => {
   ipcMain.handle('sidebar:open', (_e, target: { url?: string; file?: string; tabId: string }) =>
-    openSidebar(mainWindow, target)
+    openSidebar(mainWindow, target, () => resizeActiveTab(mainWindow))
   )
 
   ipcMain.handle('sidebar:close', (_e, tabId: string) => closeSidebar(mainWindow, tabId))

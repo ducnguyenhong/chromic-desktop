@@ -1,62 +1,75 @@
 import { BrowserWindow, WebContentsView } from 'electron'
 import { join } from 'path'
-import { getActiveTabId, resizeTab } from './tab-manager'
 
 interface Sidebar {
   view: WebContentsView
   width: number
+  separator?: WebContentsView
 }
 
 const sidebars: Record<string, Sidebar> = {} // key là tabId
-const defaultWidth: number = 400
+const defaultWidth = 800
+const separatorWidth = 1
 
 // ================= OPEN / CLOSE =================
+// ... phần import và interface giữ nguyên
+
 export const openSidebar = (
   mainWindow: BrowserWindow,
-  options: { url?: string; file?: string; tabId?: string }
+  options: { url?: string; file?: string; tabId?: string },
+  resizeTabCallback?: () => void
 ) => {
   const tabId = options.tabId
   if (!tabId) return
 
-  // Nếu sidebar đã tồn tại cho tab này, remove trước
-  if (sidebars[tabId]) {
-    closeSidebar(mainWindow, tabId)
-  }
+  if (sidebars[tabId]) closeSidebar(mainWindow, tabId)
 
+  // Sidebar chính
   const sidebar = new WebContentsView({
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
+    webPreferences: { sandbox: false }
   })
+  sidebar.webContents.loadURL('about:blank')
+  sidebar.webContents.once('dom-ready', () => {
+    sidebar.webContents.insertCSS(`
+      body { margin:0; overflow:auto; }
+    `)
+    if (options.url) sidebar.webContents.loadURL(options.url)
+    else if (options.file)
+      sidebar.webContents.loadFile(join(__dirname, `../renderer/${options.file}`))
+  })
+  mainWindow.contentView.addChildView(sidebar)
 
-  if (options.url) sidebar.webContents.loadURL(options.url)
-  else if (options.file)
-    sidebar.webContents.loadFile(join(__dirname, `../renderer/${options.file}`))
+  // Separator
+  const separator = new WebContentsView({ webPreferences: { sandbox: false } })
+  separator.webContents.loadURL('about:blank')
+  separator.webContents.once('dom-ready', () => {
+    separator.webContents.insertCSS(`
+      body { margin:0; background: #cccccc; }
+    `)
+  })
+  mainWindow.contentView.addChildView(separator)
 
-  sidebars[tabId] = { view: sidebar, width: defaultWidth }
+  sidebars[tabId] = { view: sidebar, width: defaultWidth, separator }
 
-  // Nếu tab hiện tại là tabId, attach sidebar
-  const activeId = getActiveTabId()
-  if (activeId === tabId) {
-    mainWindow.contentView.addChildView(sidebar)
-    layoutSidebar(mainWindow, tabId)
-  }
+  layoutSidebar(mainWindow, tabId)
+
+  if (resizeTabCallback) resizeTabCallback()
 }
 
+// Đóng sidebar
 export const closeSidebar = (mainWindow: BrowserWindow, tabId: string) => {
   const sb = sidebars[tabId]
   if (!sb) return
 
   mainWindow.contentView.removeChildView(sb.view)
   sb.view.webContents.close()
-  delete sidebars[tabId]
 
-  // Nếu tab đang active, resize tab để full width
-  const activeId = getActiveTabId()
-  if (activeId === tabId) {
-    resizeTab(mainWindow, activeId)
+  if (sb.separator) {
+    mainWindow.contentView.removeChildView(sb.separator)
+    sb.separator.webContents.close()
   }
+
+  delete sidebars[tabId]
 }
 
 // ================= LAYOUT / RESIZE =================
@@ -65,19 +78,31 @@ export const layoutSidebar = (mainWindow: BrowserWindow, tabId: string) => {
   if (!sb) return
 
   const bounds = mainWindow.getBounds()
-  const x = bounds.width - sb.width
   const y = 118
   const height = bounds.height - 134
+  const sidebarX = bounds.width - sb.width - 16
+  const separatorX = sidebarX - separatorWidth
 
-  sb.view.setBounds({ x, y, width: sb.width, height })
+  // Sidebar
+  sb.view.setBounds({
+    x: sidebarX,
+    y,
+    width: sb.width,
+    height
+  })
 
-  // Resize tab hiện tại để nhường chỗ sidebar
-  const activeId = getActiveTabId()
-  if (activeId === tabId) {
-    resizeTab(mainWindow, activeId)
+  // Separator
+  if (sb.separator) {
+    sb.separator.setBounds({
+      x: separatorX,
+      y,
+      width: separatorWidth,
+      height
+    })
   }
 }
 
+// Resize sidebar
 export const resizeSidebar = (mainWindow: BrowserWindow, tabId: string, newWidth: number) => {
   const sb = sidebars[tabId]
   if (!sb) return
@@ -88,15 +113,16 @@ export const resizeSidebar = (mainWindow: BrowserWindow, tabId: string, newWidth
 
 // ================= TAB SWITCH =================
 export const onTabActivated = (mainWindow: BrowserWindow, tabId: string) => {
-  // Ẩn tất cả sidebar
+  // Ẩn tất cả sidebar + separator
   Object.values(sidebars).forEach((sb) => {
     mainWindow.contentView.removeChildView(sb.view)
+    if (sb.separator) mainWindow.contentView.removeChildView(sb.separator)
   })
 
-  // Hiển thị sidebar tab đang active
   const sb = sidebars[tabId]
   if (sb) {
     mainWindow.contentView.addChildView(sb.view)
+    if (sb.separator) mainWindow.contentView.addChildView(sb.separator)
     layoutSidebar(mainWindow, tabId)
   }
 }

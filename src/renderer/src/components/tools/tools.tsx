@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { AiOutlineAppstore, AiOutlineMoon } from 'react-icons/ai'
 import { BsFiletypeJson } from 'react-icons/bs'
 import { IoCodeSlashOutline } from 'react-icons/io5'
-import { LiaRulerSolid } from 'react-icons/lia'
 import { RiCodeFill } from 'react-icons/ri'
 import { TbApi } from 'react-icons/tb'
 import { VscSymbolColor } from 'react-icons/vsc'
@@ -17,28 +16,31 @@ const Tools: React.FC = () => {
 
   const TOOLS = [
     {
-      id: 'ruler',
-      icon: <LiaRulerSolid size={20} color="#4f4f4f" />,
-      title: 'Ruler',
-      onClick: () => window.sidebar.open({ url: 'https://stormik.vercel.app', tabId: activeId })
-    },
-    {
       id: 'color-picker',
       icon: <VscSymbolColor size={19} color="#4f4f4f" />,
       title: 'Color Picker',
-      onClick: () => window.sidebar.open({ file: 'chromic_tool.html' })
+      onClick: () =>
+        window.sidebar.open({
+          url: 'https://www.w3schools.com/colors/colors_picker.asp',
+          tabId: activeId
+        })
+      // window.sidebar.open({ file: 'chromic_tool.html' })
     },
     {
       id: 'json-viewer',
       icon: <BsFiletypeJson size={17} color="#4f4f4f" />,
       title: 'JSON Viewer',
-      onClick: () => window.sidebar.open({ url: 'https://24h.com.vn', tabId: activeId })
+      onClick: () => window.sidebar.open({ url: 'https://jsonformatter.org', tabId: activeId })
     },
     {
       id: 'api-caller',
       icon: <TbApi size={20} color="#4f4f4f" />,
       title: 'API Caller',
-      onClick: () => {}
+      onClick: () =>
+        window.sidebar.open({
+          url: 'https://apirequest.io',
+          tabId: activeId
+        })
     },
     {
       id: 'dark-theme',
