@@ -3,8 +3,8 @@ import { useTabs } from '@renderer/state/tabs'
 import { motion } from 'framer-motion'
 import { AiOutlineAppstore, AiOutlineMoon } from 'react-icons/ai'
 import { BsFiletypeJson } from 'react-icons/bs'
-import { IoCodeSlashOutline } from 'react-icons/io5'
-import { RiCodeFill } from 'react-icons/ri'
+import { IoCloseOutline, IoCodeSlashOutline } from 'react-icons/io5'
+import { RiCodeFill, RiOpenaiFill } from 'react-icons/ri'
 import { TbApi } from 'react-icons/tb'
 import { VscSymbolColor } from 'react-icons/vsc'
 
@@ -58,21 +58,6 @@ const Tools: React.FC = () => {
 
   return (
     <Flex px="10px" align="center" gap="6px">
-      <Flex
-        title="Developer Tools"
-        w="28px"
-        h="28px"
-        align="center"
-        justify="center"
-        borderRadius="full"
-        bgColor="#f2f2f2"
-        transitionDuration="200ms"
-        _hover={{ bgColor: '#d9d9d9' }}
-        onClick={() => window.tabs.inspectCurrent()}
-      >
-        <RiCodeFill size={18} color="#4f4f4f" />
-      </Flex>
-
       <MotionBox
         overflow="hidden"
         initial={{ width: 0 }}
@@ -117,6 +102,56 @@ const Tools: React.FC = () => {
         onClick={onToggle}
       >
         <AiOutlineAppstore size={19} color="#4f4f4f" />
+      </Flex>
+
+      <Flex
+        title="Developer Tools"
+        w="28px"
+        h="28px"
+        align="center"
+        justify="center"
+        borderRadius="full"
+        bgColor="#f2f2f2"
+        transitionDuration="200ms"
+        _hover={{ bgColor: '#d9d9d9' }}
+        onClick={() =>
+          window.sidebar.open({
+            url: 'https://chatgpt.com',
+            tabId: activeId
+          })
+        }
+      >
+        <RiOpenaiFill size={18} color="#4f4f4f" />
+      </Flex>
+
+      <Flex
+        title="Developer Tools"
+        w="28px"
+        h="28px"
+        align="center"
+        justify="center"
+        borderRadius="full"
+        bgColor="#f2f2f2"
+        transitionDuration="200ms"
+        _hover={{ bgColor: '#d9d9d9' }}
+        onClick={() => window.tabs.inspectCurrent()}
+      >
+        <RiCodeFill size={18} color="#4f4f4f" />
+      </Flex>
+
+      <Flex
+        title="Developer Tools"
+        w="28px"
+        h="28px"
+        align="center"
+        justify="center"
+        borderRadius="full"
+        bgColor="#f2f2f2"
+        transitionDuration="200ms"
+        _hover={{ bgColor: '#d9d9d9' }}
+        onClick={() => window.sidebar.close(activeId)}
+      >
+        <IoCloseOutline size={18} color="#4f4f4f" />
       </Flex>
     </Flex>
   )

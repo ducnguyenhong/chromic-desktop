@@ -41,6 +41,14 @@ const sidebar = {
   has: (tabId: string) => ipcRenderer.invoke('sidebar:has', tabId)
 }
 
+const separatorAPI = {
+  // called from separator's page to send raw drag delta (px)
+  drag: (tabId: string, deltaX: number) => ipcRenderer.send('sidebar:drag', tabId, deltaX),
+  // optional start/end if you want to track state
+  start: (tabId: string) => ipcRenderer.send('sidebar:drag-start', tabId),
+  end: (tabId: string) => ipcRenderer.send('sidebar:drag-end', tabId)
+}
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
@@ -48,6 +56,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('reader', reader)
     contextBridge.exposeInMainWorld('ui', ui)
     contextBridge.exposeInMainWorld('sidebar', sidebar)
+    contextBridge.exposeInMainWorld('separatorAPI', separatorAPI)
   } catch (error) {
     console.error(error)
   }

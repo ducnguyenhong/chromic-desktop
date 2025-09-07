@@ -8,5 +8,6 @@ declare global {
     reader: any
     ui: any
     sidebar: any
+    setupSeparator: any
   }
 }

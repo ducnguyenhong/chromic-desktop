@@ -4,6 +4,7 @@ import { join } from 'path'
 import {
   closeSidebar,
   getSidebarWidth,
+  handleSidebarDrag,
   hasSidebarForTab,
   onTabActivated,
   openSidebar,
@@ -261,11 +262,21 @@ export const registerSidebarIpc = (mainWindow: BrowserWindow) => {
     openSidebar(mainWindow, target, () => resizeActiveTab(mainWindow))
   )
 
-  ipcMain.handle('sidebar:close', (_e, tabId: string) => closeSidebar(mainWindow, tabId))
+  ipcMain.handle('sidebar:close', (_e, tabId: string) =>
+    closeSidebar(mainWindow, tabId, () => resizeActiveTab(mainWindow))
+  )
 
   ipcMain.handle('sidebar:resize', (_e, tabId: string, width: number) =>
     resizeSidebar(mainWindow, tabId, width)
   )
 
   ipcMain.handle('sidebar:has', (_e, tabId: string) => hasSidebarForTab(tabId))
+
+  // ---- drag IPC: nhận delta từ separator view and delegate to sidebar-manager ----
+  // Use .on for continuous events; ensure you register only once per window launch
+  ipcMain.on('sidebar:drag', (_event, tabId: string, deltaX: number) => {
+    handleSidebarDrag(mainWindow, tabId, deltaX)
+    // also resize active tab so main view keeps scroll:
+    resizeActiveTab(mainWindow)
+  })
 }
